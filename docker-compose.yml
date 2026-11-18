@@ -1,0 +1,57 @@
+services:
+  # ── PostgreSQL ──────────────────────────────────────────────────────────────
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-churniq}
+      POSTGRES_USER: ${POSTGRES_USER:-churniq}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env.docker}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\""]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  # ── FastAPI backend + ML inference ─────────────────────────────────────────
+  # The ML model is loaded at startup from /app/models inside the container.
+  # Alembic migrations are applied automatically before the API server starts.
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    environment:
+      DATABASE_URL: postgresql+psycopg2://${POSTGRES_USER:-churniq}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-churniq}
+      ENVIRONMENT: ${ENVIRONMENT:-development}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:?Set JWT_SECRET_KEY in .env.docker}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173}
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS:-localhost,127.0.0.1,backend}
+      HTTPS_ENFORCE: ${HTTPS_ENFORCE:-false}
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:${API_PORT:-8000}:8000"
+    volumes:
+      # Persist batch-job CSV artefacts across container restarts
+      - batch_jobs:/app/backend/storage/batch_jobs
+      # Mount the trained model so it can be swapped without rebuilding
+      - ./models:/app/models:ro
+    restart: unless-stopped
+
+  # ── React frontend (Nginx static + API proxy) ───────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    depends_on:
+      - backend
+    ports:
+      - "127.0.0.1:${FRONTEND_PORT:-5173}:80"
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  batch_jobs:

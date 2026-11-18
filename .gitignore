@@ -1,0 +1,27 @@
+# ── Secrets ──────────────────────────────────────────────────────────────────
+.env.docker
+backend/.env
+
+# ── Python ───────────────────────────────────────────────────────────────────
+backend/.venv/
+backend/__pycache__/
+backend/.pytest_cache/
+__pycache__/
+*.py[cod]
+*.pyo
+
+# ── Database (local SQLite dev only) ─────────────────────────────────────────
+backend/churniq.db
+
+# ── Batch job artefacts ──────────────────────────────────────────────────────
+backend/storage/batch_jobs/*
+!backend/storage/batch_jobs/.gitkeep
+
+# ── Node / Frontend ───────────────────────────────────────────────────────────
+frontend/node_modules/
+frontend/dist/
+frontend/*.tsbuildinfo
+
+# ── Data directory (keep the folder, ignore large CSVs) ──────────────────────
+data/*
+!data/.gitkeep

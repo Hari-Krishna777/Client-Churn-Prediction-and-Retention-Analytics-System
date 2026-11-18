@@ -1,0 +1,36 @@
+# ── Version control ──────────────────────────────────────────────────────────
+.git
+.gitignore
+
+# ── Secrets and local env files ──────────────────────────────────────────────
+.env
+.env.*
+!.env.example
+!.env.docker.example
+
+# ── Python artefacts ─────────────────────────────────────────────────────────
+**/__pycache__
+**/*.py[cod]
+**/.pytest_cache
+**/.venv
+**/venv
+
+# ── Frontend build artefacts (not needed in Docker build context) ─────────────
+frontend/node_modules
+frontend/dist
+frontend/*.tsbuildinfo
+
+# ── Backend local artefacts ───────────────────────────────────────────────────
+backend/.env
+backend/churniq.db
+backend/storage/batch_jobs/*
+!backend/storage/batch_jobs/.gitkeep
+
+# ── Data directory (large CSVs should not be in the image) ───────────────────
+data/*
+!data/.gitkeep
+
+# ── IDE / OS ─────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+*.swp
