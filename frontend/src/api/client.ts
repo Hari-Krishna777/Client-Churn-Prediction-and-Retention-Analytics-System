@@ -27,11 +27,23 @@ apiClient.interceptors.request.use(
 // Response interceptor for consistent error messaging
 apiClient.interceptors.response.use(
   (response) => response,
-  (error: AxiosError<{ detail?: string | string[] }>) => {
+  async (error: AxiosError<{ detail?: string | string[] } | Blob>) => {
     let message = 'An unexpected network error occurred.';
-    if (error.response?.data?.detail) {
-      const detail = error.response.data.detail;
-      message = Array.isArray(detail) ? detail.join(', ') : detail;
+    if (error.response?.data) {
+      if (error.response.data instanceof Blob) {
+        try {
+          const text = await error.response.data.text();
+          const parsed = JSON.parse(text);
+          if (parsed.detail) {
+            message = Array.isArray(parsed.detail) ? parsed.detail.join(', ') : parsed.detail;
+          }
+        } catch {
+          message = error.message || message;
+        }
+      } else if (typeof error.response.data === 'object' && 'detail' in error.response.data && error.response.data.detail) {
+        const detail = error.response.data.detail;
+        message = Array.isArray(detail) ? detail.join(', ') : detail;
+      }
     } else if (error.message) {
       message = error.message;
     }

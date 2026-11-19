@@ -3,7 +3,7 @@ from datetime import datetime, timezone, timedelta
 from typing import Optional, Dict, Any, List
 import jwt
 import bcrypt
-from fastapi import Depends, HTTPException, status, Header
+from fastapi import Depends, HTTPException, status, Header, Query
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 
@@ -96,23 +96,24 @@ def decode_access_token(token: str) -> Dict[str, Any]:
 
 
 def get_current_user(
+    token: Optional[str] = Query(default=None),
     auth: Optional[HTTPAuthorizationCredentials] = Depends(security_scheme),
     db: Session = Depends(get_db)
 ) -> User:
     """
     FastAPI dependency for extracting and verifying the authenticated User principal.
     Every customer-data endpoint requires a valid bearer token.
+    Supports either Authorization: Bearer <token> or ?token=<token> query parameter.
     """
-    if not auth or not auth.credentials:
+    raw_token = auth.credentials if (auth and auth.credentials) else token
+    if not raw_token:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Authentication is required.",
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    token = auth.credentials
-
-    payload = decode_access_token(token)
+    payload = decode_access_token(raw_token)
     user_id = payload.get("sub") or payload.get("user_id")
     if not user_id:
         username = payload.get("username")

@@ -27,6 +27,20 @@ export const ReportsPage: React.FC = () => {
   const [recsSummary, setRecsSummary] = useState<RecommendationSummaryResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState<string | null>(null);
+  const [downloadingJobId, setDownloadingJobId] = useState<string | null>(null);
+
+  const handleDownloadBatchCsv = async (jobId: string, filename?: string) => {
+    setDownloadingJobId(jobId);
+    try {
+      notify('info', 'Downloading batch predictions CSV...', 'Download Started');
+      await batchApi.downloadCsv(jobId, filename);
+      notify('success', 'Batch predictions CSV downloaded successfully!', 'Download Complete');
+    } catch (err: any) {
+      notify('error', err.message || 'Failed to download prediction CSV.', 'Download Error');
+    } finally {
+      setDownloadingJobId(null);
+    }
+  };
 
   useEffect(() => {
     Promise.all([
@@ -285,15 +299,15 @@ export const ReportsPage: React.FC = () => {
                       {job.completed_at ? new Date(job.completed_at).toLocaleString() : 'Recent'}
                     </td>
                     <td className="px-4 py-3 text-right">
-                      <a
-                        href={`/api/batch/${job.job_id}/download`}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-semibold text-xs transition border border-emerald-200"
+                      <button
+                        type="button"
+                        onClick={() => handleDownloadBatchCsv(job.job_id, job.filename)}
+                        disabled={downloadingJobId === job.job_id}
+                        className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 disabled:opacity-60 text-emerald-800 font-semibold text-xs transition border border-emerald-200 cursor-pointer"
                       >
                         <Download className="w-3.5 h-3.5" />
-                        <span>Download CSV</span>
-                      </a>
+                        <span>{downloadingJobId === job.job_id ? 'Downloading...' : 'Download CSV'}</span>
+                      </button>
                     </td>
                   </tr>
                 ))}

@@ -54,6 +54,20 @@ export const UploadPage: React.FC = () => {
 
   const [historyJobs, setHistoryJobs] = useState<BatchJobItem[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(true);
+  const [downloadingJobId, setDownloadingJobId] = useState<string | null>(null);
+
+  const handleDownloadPredictions = async (jobId: string, filename?: string) => {
+    setDownloadingJobId(jobId);
+    try {
+      notify('info', 'Downloading batch predictions CSV...', 'Download Started');
+      await batchApi.downloadCsv(jobId, filename);
+      notify('success', 'Batch predictions CSV downloaded successfully!', 'Download Complete');
+    } catch (err: any) {
+      notify('error', err.message || 'Failed to download prediction CSV.', 'Download Error');
+    } finally {
+      setDownloadingJobId(null);
+    }
+  };
 
   // Drag and drop state
   const [isDragging, setIsDragging] = useState(false);
@@ -265,15 +279,15 @@ export const UploadPage: React.FC = () => {
                   </div>
                 </div>
 
-                <a
-                  href={`/api/batch/${uploadResult.job_id}/download`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold shadow-xs transition"
+                <button
+                  type="button"
+                  onClick={() => handleDownloadPredictions(uploadResult.job_id, uploadResult.filename)}
+                  disabled={downloadingJobId === uploadResult.job_id}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 text-white text-xs font-semibold shadow-xs transition cursor-pointer"
                 >
                   <Download className="w-3.5 h-3.5" />
-                  Download Predictions CSV
-                </a>
+                  {downloadingJobId === uploadResult.job_id ? 'Downloading...' : 'Download Predictions CSV'}
+                </button>
               </div>
 
               {/* Validation Summary Metrics */}
@@ -417,15 +431,15 @@ export const UploadPage: React.FC = () => {
                           {job.created_at ? new Date(job.created_at).toLocaleString() : 'N/A'}
                         </td>
                         <td className="px-3 py-2.5 text-right">
-                          <a
-                            href={`/api/batch/${job.job_id}/download`}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium transition"
+                          <button
+                            type="button"
+                            onClick={() => handleDownloadPredictions(job.job_id, job.filename)}
+                            disabled={downloadingJobId === job.job_id}
+                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-slate-100 hover:bg-slate-200 disabled:opacity-60 text-slate-700 font-medium transition cursor-pointer"
                           >
                             <Download className="w-3 h-3" />
-                            CSV
-                          </a>
+                            {downloadingJobId === job.job_id ? '...' : 'CSV'}
+                          </button>
                         </td>
                       </tr>
                     ))}
