@@ -39,6 +39,7 @@ class User(Base):
     # Relationships
     datasets = relationship("Dataset", back_populates="user", cascade="all, delete-orphan")
     batch_jobs = relationship("BatchJobModel", back_populates="user")
+    password_reset_tokens = relationship("PasswordResetToken", back_populates="user", cascade="all, delete-orphan")
 
 
 class Dataset(Base):
@@ -199,3 +200,17 @@ class BatchJobModel(Base):
     # Relationships
     dataset = relationship("Dataset", back_populates="batch_jobs")
     user = relationship("User", back_populates="batch_jobs")
+
+
+class PasswordResetToken(Base):
+    __tablename__ = "password_reset_tokens"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    user_id = Column(String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    token_hash = Column(String(64), nullable=False, index=True)
+    expires_at = Column(DateTime(timezone=True), nullable=False)
+    used = Column(Boolean, default=False, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=utc_now, nullable=False)
+
+    # Relationships
+    user = relationship("User", back_populates="password_reset_tokens")

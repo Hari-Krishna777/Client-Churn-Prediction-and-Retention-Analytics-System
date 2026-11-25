@@ -36,6 +36,18 @@ HTTPS_ENFORCE = os.getenv("HTTPS_ENFORCE", "true" if ENVIRONMENT == "production"
 CORS_ORIGINS = [origin.strip() for origin in os.getenv("CORS_ORIGINS", "http://localhost:5173").split(",") if origin.strip()]
 ALLOWED_HOSTS = [host.strip() for host in os.getenv("ALLOWED_HOSTS", "*").split(",") if host.strip()]
 
+# Email / SMTP configuration for password reset and notifications
+SMTP_HOST = os.getenv("SMTP_HOST", "")
+SMTP_PORT = int(os.getenv("SMTP_PORT", "587"))
+SMTP_USER = os.getenv("SMTP_USER", "")
+SMTP_PASSWORD = os.getenv("SMTP_PASSWORD", "")
+SMTP_FROM_EMAIL = os.getenv("SMTP_FROM_EMAIL", "no-reply@churniq.io")
+SMTP_FROM_NAME = os.getenv("SMTP_FROM_NAME", "ChurnIQ")
+SMTP_TLS = os.getenv("SMTP_TLS", "true").lower() in {"1", "true", "yes"}
+SMTP_SSL = os.getenv("SMTP_SSL", "false").lower() in {"1", "true", "yes"}
+FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
+PASSWORD_RESET_TOKEN_EXPIRE_MINUTES = int(os.getenv("PASSWORD_RESET_TOKEN_EXPIRE_MINUTES", "30"))
+
 # The 19 original input features
 INPUT_NUMERIC_FEATURES = [
     "SeniorCitizen",

@@ -29,6 +29,15 @@ services:
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173}
       ALLOWED_HOSTS: ${ALLOWED_HOSTS:-localhost,127.0.0.1,backend}
       HTTPS_ENFORCE: ${HTTPS_ENFORCE:-false}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_FROM_EMAIL: ${SMTP_FROM_EMAIL:-no-reply@churniq.io}
+      SMTP_FROM_NAME: ${SMTP_FROM_NAME:-ChurnIQ}
+      SMTP_TLS: ${SMTP_TLS:-true}
+      SMTP_SSL: ${SMTP_SSL:-false}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:5173}
     depends_on:
       db:
         condition: service_healthy
